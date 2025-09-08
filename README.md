@@ -4,7 +4,7 @@ Source codes for the paper "A Bidirectional Selective State Space Model for Imag
 
 ## Task Overview
 
-![Task](overall.png)
+![Task](overall.pdf)
 
 ## Training
 
