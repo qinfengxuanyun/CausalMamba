@@ -1,4 +1,4 @@
-# A Sparse transformer for imaging genetic association analysis of Alzheimer's disease and brain aging
+# A Bidirectional Selective State Space Model for Imaging-Genetic Causal Analysis of Neurodegenerative Diseases
 
 Source codes for the paper "A Bidirectional Selective State Space Model for Imaging-Genetic Causal Analysis of Neurodegenerative Diseases".
 
