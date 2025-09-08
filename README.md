@@ -1,6 +1,6 @@
 # A Sparse transformer for imaging genetic association analysis of Alzheimer's disease and brain aging
 
-Source codes for the paper "A Sparse transformer for imaging genetic association analysis of Alzheimer's disease and brain aging".
+Source codes for the paper "A Bidirectional Selective State Space Model for Imaging-Genetic Causal Analysis of Neurodegenerative Diseases".
 
 ## Task Overview
 
@@ -9,18 +9,16 @@ Source codes for the paper "A Sparse transformer for imaging genetic association
 ## Training
 
 ```bash
-# The training process of MRI feature extraction
-python train_mri.py
-# The training process of MRI and SNP association
-python train_gene2mri.py
+# The training process of MRI and SNP feature extraction and causal inference
+python train_clip.py
+# The training process of classification
+python train_cls.py
 ```
 ## Testing
 
 ```bash
-# The testing process of MRI feature extraction
-python test_mri.py
-# The testing process of MRI and SNP association
-python test_gene2mri.py
+# The testing process of SNP classification
+python test_cls.py
 ```
 
 ## License
