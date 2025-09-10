@@ -121,7 +121,7 @@ criterion = nn.CrossEntropyLoss().cuda()
 
 task = 'adcls'
 ep=200
-pretrain_dir = f"./generation_models/ADNIALL_UKB_T1-GENE-CLIP_MAECLS_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
+pretrain_dir = f"./generation_models/ADNIALL_T1-GENE-CLIP_MAECLS_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
 
 TRAIN_BATCH_SIZE = 8
 TEST_BATCH_SIZE = 8

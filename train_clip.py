@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 import os
-
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -128,9 +128,9 @@ torch.backends.cudnn.deterministic = True
 
 task = 'adcls'
 ep = 100
-pretrain_dir = f"./generation_models/ADNI_T1-GENE-CLIP_MAECLS_Mask_0.8_0.8_{task}"
-MODEL_PATH = f"./generation_models/ADNIALL_UKB_T1-GENE-CLIP_MAE_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
-LOG_PATH = f"./logs/log_adniall_ukb_t1-gene-clip_MAE_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
+pretrain_dir = f"./generation_models/ADNIALL_T1-GENE-CLIP_MAECLS_Mask_0.8_0.8_{task}"
+MODEL_PATH = f"./generation_models/ADNIALL_T1-GENE-CLIP_MAE_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
+LOG_PATH = f"./logs/log_adniall_t1-gene-clip_MAE_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
 
 os.system("mkdir -p {}".format(MODEL_PATH))
 os.system("mkdir -p {}".format(LOG_PATH))

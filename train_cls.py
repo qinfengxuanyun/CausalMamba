@@ -120,10 +120,10 @@ torch.backends.cudnn.deterministic = True
 criterion = nn.CrossEntropyLoss().cuda()
 
 task = 'adcls'
-pretrain_dir = f"./generation_models/ADNIALL_UKB_T1-GENE-CLIP_MAE_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
+pretrain_dir = f"./generation_models/ADNIALL_T1-GENE-CLIP_MAE_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
 ep=100
-MODEL_PATH = f"./generation_models/ADNIALL_UKB_T1-GENE-CLIP_MAECLS_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
-LOG_PATH = f"./logs/log_adniall_ukb_t1-gene-clip_MAECLS_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
+MODEL_PATH = f"./generation_models/ADNIALL_T1-GENE-CLIP_MAECLS_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
+LOG_PATH = f"./logs/log_adniall_t1-gene-clip_MAECLS_{task}_{opt.use_sparse + 1}_{opt.use_sparse2 + 1}_{opt.mri_th}_{opt.snp_th}"
 
 os.system("mkdir -p {}".format(MODEL_PATH))
 os.system("mkdir -p {}".format(LOG_PATH))
