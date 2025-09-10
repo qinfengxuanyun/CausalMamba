@@ -22,88 +22,64 @@ from tensorboardX import SummaryWriter
 cuda = torch.cuda.is_available()
 
 class CLIP(nn.Module):
-    def __init__(self, temperature=0.07):
+    def __init__(self, temperature=0.07, feature_num=512):
         super(CLIP, self).__init__()
-        self.image_proj = nn.Linear(128, 512)
-        self.male_fc = nn.Linear(2, 256)
-        self.snp_proj = nn.Linear(128, 512)
-        # self.male_fc = nn.Linear(2, 32)
-        # self.snp_proj = nn.Linear(128+32, 512)
+        self.image_proj = nn.Linear(feature_num, 512)
+        self.snp_proj = nn.Linear(feature_num, 512)
+        self.image_pooling = nn.AdaptiveMaxPool2d((1, feature_num))  # nn.AdaptiveAvgPool2d((1,config.hidden_size))#
+        self.snp_pooling = nn.AdaptiveMaxPool2d((1, feature_num))  # nn.AdaptiveAvgPool2d((1,config.hidden_size))#
         self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / temperature))
         self.nolin = nn.ELU()
-        self.norm = nn.LayerNorm(128)
+        self.norm = nn.GroupNorm(4, feature_num)
 
-    def forward(self, image_features, snp_features, mask, age_sex):
+    def forward(self, image_features, snp_features, mask):
         image_features = image_features.view(image_features.size(0), -1)
         image_features = self.image_proj(image_features)
 
         snp_features = snp_features.view(snp_features.size(0), -1)
-        # style = self.nolin(self.male_fc(age_sex))
-        # snp_features = (1.0+style[:,0:128]) *  self.norm(snp_features) + style[:,128:]
-        # snp_features = torch.cat([self.nolin(self.male_fc(age_sex)), snp_features],dim=1)
         snp_features = self.snp_proj(snp_features)
 
         clip_scores = F.cosine_similarity(image_features, snp_features)
         # normalized features
-        image_features = image_features / image_features.norm(dim=1, keepdim=True)
-        snp_features = snp_features / snp_features.norm(dim=1, keepdim=True)
+        image_features_norm = image_features / image_features.norm(dim=1, keepdim=True)
+        snp_features_norm = snp_features / snp_features.norm(dim=1, keepdim=True)
 
         # cosine similarity as logits
         logit_scale = self.logit_scale.exp()
-        logits = logit_scale * image_features @ snp_features.t()
+        logits = logit_scale * image_features_norm @ snp_features_norm.t()
 
-        # # 计算对角线元素（正样本）的索引
-        # labels = torch.arange(logits.shape[0], device=logits.device)
-        # # 计算损失
-        # loss = F.cross_entropy(logits, labels) + F.cross_entropy(logits.t(), labels)
-
-        loss_img = torch.sum(-1.0 * F.log_softmax(logits, dim=0) * mask / torch.sum(mask, dim=0, keepdim=True)) / \
-                   logits.shape[0]
-        loss_snp = torch.sum(-1.0 * F.log_softmax(logits.t(), dim=0) * mask / torch.sum(mask, dim=0, keepdim=True)) / \
-                   logits.shape[0]
+        loss_img = torch.sum(-1.0 * F.log_softmax(logits, dim=0) * mask / torch.sum(mask, dim=0, keepdim=True)) / logits.shape[0]
+        loss_snp = torch.sum(-1.0 * F.log_softmax(logits.t(), dim=0) * mask / torch.sum(mask, dim=0, keepdim=True)) / logits.shape[0]
         loss = loss_img + loss_snp
 
-        return loss / 2, clip_scores
+        return loss / 2, clip_scores, image_features, snp_features
 
-    def forward2(self, mri_features, snp_features, mri_features2, snp_features2, mask, age_sex):
+    def forward2(self, mri_features, snp_features, mri_features2, snp_features2, mask):
+        # style = self.nolin(self.male_fc(age_sex))
         mri_features = mri_features.view(mri_features.size(0), -1)
         mri_features = self.image_proj(mri_features)
         snp_features = snp_features.view(snp_features.size(0), -1)
-        # style = self.male_fc(age_sex)
-        # snp_features = (1.0+style[:,0:128]) * snp_features + style[:,128:]
         snp_features = self.snp_proj(snp_features)
 
         mri_features2 = mri_features2.view(mri_features2.size(0), -1)
         mri_features2 = self.image_proj(mri_features2)
         snp_features2 = snp_features2.view(snp_features2.size(0), -1)
-        # snp_features2 = (1.0+style[:,0:128]) * snp_features2 + style[:,128:]
         snp_features2 = self.snp_proj(snp_features2)
 
         # normalized features
-        mri_features = mri_features / mri_features.norm(dim=1, keepdim=True)
-        snp_features = snp_features / snp_features.norm(dim=1, keepdim=True)
-        mri_features2 = mri_features2 / mri_features2.norm(dim=1, keepdim=True)
-        snp_features2 = snp_features2 / snp_features2.norm(dim=1, keepdim=True)
+        mri_features_norm = mri_features / mri_features.norm(dim=1, keepdim=True)
+        snp_features_norm = snp_features / snp_features.norm(dim=1, keepdim=True)
+        mri_features2_norm = mri_features2 / mri_features2.norm(dim=1, keepdim=True)
+        snp_features2_norm = snp_features2 / snp_features2.norm(dim=1, keepdim=True)
 
         # cosine similarity as logits
         logit_scale = self.logit_scale.exp()
-        logits = logit_scale * mri_features @ snp_features.t()
-        logits2 = logit_scale * mri_features2 @ snp_features2.t()
-
-        # # 计算对角线元素（正样本）的索引
-        # labels = torch.arange(logits.shape[0], device=logits.device)
-        # # 计算损失
-        # loss = F.cross_entropy(torch.cat([logits,logits2],dim=1), labels) + F.cross_entropy(torch.cat([logits.t(),logits2.t()],dim=1), labels)
+        logits = logit_scale * mri_features_norm @ snp_features_norm.t()
+        logits2 = logit_scale * mri_features2_norm @ snp_features2_norm.t()
 
         mask = torch.cat([mask, torch.zeros_like(mask)], dim=1)
-        loss_img = torch.sum(
-            -1.0 * F.log_softmax(torch.cat([logits, logits2], dim=1), dim=1) * mask / torch.sum(mask, dim=1,
-                                                                                                keepdim=True)) / \
-                   logits.shape[0]
-        loss_snp = torch.sum(
-            -1.0 * F.log_softmax(torch.cat([logits.t(), logits2.t()], dim=1), dim=1) * mask / torch.sum(mask, dim=1,
-                                                                                                        keepdim=True)) / \
-                   logits.shape[0]
+        loss_img = torch.sum(-1.0 * F.log_softmax(torch.cat([logits, logits2], dim=1), dim=1) * mask / torch.sum(mask, dim=1,keepdim=True)) / logits.shape[0]
+        loss_snp = torch.sum(-1.0 * F.log_softmax(torch.cat([logits.t(), logits2.t()], dim=1), dim=1) * mask / torch.sum(mask, dim=1,keepdim=True)) / logits.shape[0]
         loss = loss_img + loss_snp
 
         return loss / 2
