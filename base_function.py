@@ -233,6 +233,48 @@ class Maskcompute(nn.Module):
 
         return mask
 
+class Maskcompute2(nn.Module):
+    def __init__(self, config=None):
+        super().__init__()
+        self.config = config
+        self.fc = nn.Linear(3, config.hidden_size)
+        self.mlp = nn.Sequential(nn.Linear(config.hidden_size, config.hidden_size),
+                                 nn.ELU(),
+                                 nn.Linear(config.hidden_size, config.hidden_size))
+
+    def apply_rope(self, x):
+        bsz, seqlen, head_dim = x.shape
+        assert head_dim % 2 == 0, "Head dimension must be even for RoPE."
+
+        # 生成频率张量
+        half_dim = head_dim // 2
+        theta = 12000 ** (-torch.arange(0, half_dim, dtype=torch.float32) / half_dim).to(x.device)  # 12000
+        seq_idx = torch.arange(seqlen, dtype=torch.float32).to(x.device)
+        freqs = torch.einsum("i,j->ij", seq_idx, theta)  # [seq_len, half_dim]
+
+        # 转换为 cos/sin 编码
+        sin = freqs.sin()[None, :, :]  # shape: [1, seq_len, half_dim]
+        cos = freqs.cos()[None, :, :]
+
+        # 拆分并旋转
+        x1, x2 = x[..., :half_dim], x[..., half_dim:]
+        x_rotated = torch.cat([
+            x1 * cos - x2 * sin,
+            x1 * sin + x2 * cos
+        ], dim=-1)
+        return x_rotated
+
+    def forward(self, input_features=None):
+        B, L, C = input_features.shape
+        if C == 3:
+            features = self.fc(input_features.float())
+            features = self.apply_rope(features)
+        else:
+            features = input_features
+        mask = self.mlp(features).squeeze(-1)
+
+        return mask
+
 class Embeddings(nn.Module):
     """Construct the embeddings from word, position and token_type embeddings."""
     # Copied from transformers.models.bert.modeling_bert.BertEmbeddings.__init__

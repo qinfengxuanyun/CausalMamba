@@ -7,7 +7,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from base_function import Maskcompute, GeneMLPEncoder
+from base_function import Maskcompute, GeneMLPEncoder, Maskcompute2
 from t1_gene_clip_adniall_interp_dataset import MRIandGenedataset  # ,GroupedBatchSampler
 from vit import MRIMambaMAE
 from options.train_options import TrainOptions
@@ -195,8 +195,8 @@ for fold in range(5):
     E = Mamba_dflow(opt).cuda()
     G = MRIMambaMAE(opt).cuda()
     model = CLIP().cuda()
-    M1 = Maskcompute(opt).cuda()
-    M2 = Maskcompute(opt2).cuda()
+    M1 = Maskcompute2(opt).cuda()
+    M2 = Maskcompute2(opt2).cuda()
     G = nn.DataParallel(G)
     G2 = nn.DataParallel(G2)
     E = nn.DataParallel(E)
@@ -289,13 +289,13 @@ for fold in range(5):
             loss_clip, _, mri_feature_s, snp_feature_s = model(mri_feature, snp_feature, mask)
 
             if sparse_flag:
-                mask1 = M1(input_features=feature_emb.detach(), input_features2=mri_feature_s)
+                mask1 = M1(input_features=feature_emb.detach())
                 w_sl_use_c = mask1.unsqueeze(2)
             else:
                 w_sl_use_c = torch.ones([NUM, 1]).cuda().unsqueeze(0).repeat(B, 1, 1)
                 mask1 = w_sl_use_c[:, :, 0]
             if sparse_flag2:
-                mask2 = M2(input_features=snp_onehot, input_features2=snp_feature_s)
+                mask2 = M2(input_features=snp_onehot)
                 w_sl_use2_c = mask2.unsqueeze(2)
             else:
                 w_sl_use2_c = torch.ones([SNP_NUM, 1]).cuda().unsqueeze(0).repeat(B, 1, 1)
@@ -407,13 +407,13 @@ for fold in range(5):
                 _, _, mri_feature_s, snp_feature_s = model(mri_feature, snp_feature, mask)
 
                 if sparse_flag:
-                    mask1 = M1(input_features=feature_emb.detach(), input_features2=mri_feature_s)
+                    mask1 = M1(input_features=feature_emb.detach())
                     w_sl_use_c = mask1.unsqueeze(2)
                 else:
                     w_sl_use_c = torch.ones([NUM, 1]).cuda().unsqueeze(0).repeat(B, 1, 1)
                     mask1 = w_sl_use_c[:, :, 0]
                 if sparse_flag2:
-                    mask2 = M2(input_features=snp_onehot, input_features2=snp_feature_s)
+                    mask2 = M2(input_features=snp_onehot)
                     w_sl_use2_c = mask2.unsqueeze(2)
                 else:
                     w_sl_use2_c = torch.ones([SNP_NUM, 1]).cuda().unsqueeze(0).repeat(B, 1, 1)
@@ -546,13 +546,13 @@ for fold in range(5):
                 _, _, mri_feature_s, snp_feature_s = model(mri_feature, snp_feature, mask)
 
                 if sparse_flag:
-                    mask1 = M1(input_features=feature_emb.detach(), input_features2=mri_feature_s)
+                    mask1 = M1(input_features=feature_emb.detach())
                     w_sl_use_c = mask1.unsqueeze(2)
                 else:
                     w_sl_use_c = torch.ones([NUM, 1]).cuda().unsqueeze(0).repeat(B, 1, 1)
                     mask1 = w_sl_use_c[:, :, 0]
                 if sparse_flag2:
-                    mask2 = M2(input_features=snp_onehot, input_features2=snp_feature_s)
+                    mask2 = M2(input_features=snp_onehot)
                     w_sl_use2_c = mask2.unsqueeze(2)
                 else:
                     w_sl_use2_c = torch.ones([SNP_NUM, 1]).cuda().unsqueeze(0).repeat(B, 1, 1)
